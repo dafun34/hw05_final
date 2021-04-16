@@ -1,13 +1,10 @@
-from django.shortcuts import render, get_object_or_404, redirect,\
-    get_list_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from posts.models import Post, Group, Follow, Comment
 from posts.forms import PostForm, CommentForm
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.views.decorators.cache import cache_page
-
 
 User = get_user_model()
 
@@ -31,13 +28,14 @@ def group_posts(request, slug):
 
 @login_required
 def new_post(request):
-    form = PostForm(request.POST or None, files=request.FILES or None )
+    form = PostForm(request.POST or None, files=request.FILES or None)
     if request.method == 'POST' and form.is_valid():
         post = form.save(commit=False)
         post.author = request.user
         post.save()
         return redirect('posts:index')
     return render(request, 'posts/new.html', {'form': form})
+
 
 @login_required
 def add_comment(request, username, post_id):
@@ -106,6 +104,7 @@ def page_not_found(request, exception):
 def server_error(request):
     return render(request, 'misc/500.html', status=500)
 
+
 @login_required
 def follow_index(request):
     user = request.user
@@ -115,6 +114,7 @@ def follow_index(request):
     page = paginator.get_page(page_number)
 
     return render(request, "follow.html", {'page': page})
+
 
 @login_required
 def profile_follow(request, username):
@@ -126,7 +126,6 @@ def profile_follow(request, username):
     return redirect(reverse('posts:profile', args=[username]))
 
 
-
 @login_required
 def profile_unfollow(request, username):
     user = request.user
@@ -134,5 +133,3 @@ def profile_unfollow(request, username):
     follow = Follow.objects.get(user=user, author=author)
     follow.delete()
     return redirect(reverse('posts:profile', args=[username]))
-
-

@@ -12,6 +12,8 @@ from posts.models import Post, Group
 User = get_user_model()
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
+
+
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostFormTest(TestCase):
     @classmethod
@@ -55,7 +57,6 @@ class PostFormTest(TestCase):
             author=cls.test_user,
             group=cls.test_group,
 
-
         )
 
         cls.form = PostForm()
@@ -94,7 +95,6 @@ class PostFormTest(TestCase):
             ).exists()
         )
 
-
     def test_username_post_edit(self):
         """Проверяет что запись изменяется, а не публикуется новая """
         post_count = Post.objects.count()
@@ -110,5 +110,3 @@ class PostFormTest(TestCase):
         self.assertEqual(post_count, Post.objects.count())
         self.assertRedirects(response, reverse(
             'posts:post', kwargs={'username': 'tester', 'post_id': '1'}))
-
-

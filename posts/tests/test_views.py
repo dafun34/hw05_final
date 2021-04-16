@@ -8,11 +8,13 @@ from django.urls import reverse
 from django import forms
 from django.core.cache import caches
 
-from posts.models import Post, Group, Follow, Comment
+from posts.models import Post, Group, Follow
 
 User = get_user_model()
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
+
+
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostPagesTest(TestCase):
     @classmethod
@@ -59,7 +61,6 @@ class PostPagesTest(TestCase):
             slug='test2'
         )
 
-
         cls.obj = (Post(text='Тестовый текст %s' % i,
                         author=cls.test_user,
                         group=cls.test_group,
@@ -87,8 +88,6 @@ class PostPagesTest(TestCase):
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
         super().tearDownClass()
 
-
-
     def setUp(self):
         self.user = self.test_user
         self.guest_client = Client()
@@ -98,8 +97,6 @@ class PostPagesTest(TestCase):
 
     def tearDown(self):
         self.my_cache.clear()
-
-
 
     def test_pages_use_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -151,7 +148,7 @@ class PostPagesTest(TestCase):
         """проверяет соответствие вывода поста
         с указаной группой в group"""
         response = self.authorized_client.get(reverse('posts:group',
-                                              kwargs={'slug': 'test'}))
+                                                      kwargs={'slug': 'test'}))
         posts = response.context['page'][0]
         group = response.context['group']
         group_title = group.title
@@ -170,7 +167,7 @@ class PostPagesTest(TestCase):
     def test_group_page_2_show_correct_context(self):
         """проверяет отсутствие поста в группе 2"""
         response = self.authorized_client.get(reverse('posts:group',
-                                              kwargs={'slug': 'test2'}))
+                                                      kwargs={'slug': 'test2'}))
         posts = response.context['page']
         group = response.context['group']
         group_title = group.title
@@ -234,10 +231,7 @@ class PostPagesTest(TestCase):
         """Проверяет что кеш работает на странице index"""
         response = self.authorized_client.get(reverse('posts:index'))
         posts_first_try = response.content
-        new_object = Post.objects.create(
-            text='еще один объект',
-            author=self.test_user
-        )
+        Post.objects.create(text='еще один объект', author=self.test_user)
         response_after_new = self.authorized_client.get(reverse('posts:index'))
         posts_second_try = response_after_new.content
         self.assertEqual(posts_first_try, posts_second_try)
@@ -272,11 +266,8 @@ class PostPagesTest(TestCase):
         response = self.authorized_client.get(reverse('posts:follow_index'))
         first_posts_count = response.context['page'].paginator.count
         user = response.context['user']
-        first_follow_object = Follow.objects.create(user=user, author=friend)
-        friend_first_object = Post.objects.create(
-            author=friend,
-            text='мой первый пост'
-        )
+        Follow.objects.create(user=user, author=friend)
+        Post.objects.create(author=friend, text='мой первый пост')
         self.my_cache.clear()
         response_after = self.authorized_client.get(reverse(
             'posts:follow_index'))
@@ -287,10 +278,7 @@ class PostPagesTest(TestCase):
         response_nikita_follow = self.authorized_client.get(reverse(
             'posts:follow_index'))
         follow_nikita = response_nikita_follow.context['page'].paginator.count
-        friend_second_object = Post.objects.create(
-            author=friend,
-            text='мой второй пост'
-        )
+        Post.objects.create(author=friend, text='мой второй пост')
         self.my_cache.clear()
         response2_nikita_flw = self.authorized_client.get(reverse(
             'posts:follow_index'
@@ -302,8 +290,4 @@ class PostPagesTest(TestCase):
         """Аноним не может добавлять комменты"""
         response = self.guest_client.get(reverse(
             'posts:add_comment', kwargs={'username': 'tester', 'post_id': '14'}))
-        self.assertEqual(response.status_code , 302)
-
-
-
-
+        self.assertEqual(response.status_code, 302)
