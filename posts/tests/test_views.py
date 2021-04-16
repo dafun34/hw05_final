@@ -78,7 +78,8 @@ class PostPagesTest(TestCase):
         cls.templates_url_names = {
             'posts/index.html': reverse('posts:index'),
             'posts/new.html': reverse('posts:new_post'),
-            'posts/group.html': reverse('posts:group', kwargs={'slug': 'test'}),
+            'posts/group.html': reverse('posts:group',
+                                        kwargs={'slug': 'test'}),
             'misc/500.html': reverse('500'),
             'misc/404.html': '404/'
         }
@@ -167,7 +168,8 @@ class PostPagesTest(TestCase):
     def test_group_page_2_show_correct_context(self):
         """проверяет отсутствие поста в группе 2"""
         response = self.authorized_client.get(reverse('posts:group',
-                                                      kwargs={'slug': 'test2'}))
+                                                      kwargs={'slug': 'test2'})
+                                              )
         posts = response.context['page']
         group = response.context['group']
         group_title = group.title
@@ -289,5 +291,6 @@ class PostPagesTest(TestCase):
     def test_guest_cant_comment(self):
         """Аноним не может добавлять комменты"""
         response = self.guest_client.get(reverse(
-            'posts:add_comment', kwargs={'username': 'tester', 'post_id': '14'}))
+            'posts:add_comment', kwargs={'username': 'tester',
+                                         'post_id': '14'}))
         self.assertEqual(response.status_code, 302)
