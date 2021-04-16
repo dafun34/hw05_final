@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Добавить запись{% endblock %}
+{% block header %} {% endblock %}
+{% load user_filters %}
+{% block content %}
+{% if here is True %}
+    <h1>Отредактируйте вашу запись </h1>
+    {% else %}
+<h1>Добавьте вашу запись </h1>
+    {% endif %}
+<p>{{ author }}</p>
+<div>
+{% if here is True %}
+    <form method="post" enctype="multipart/form-data">
+{% else %}
+<form method="post" enctype="multipart/form-data" action="{% url 'posts:new_post' %}">
+    {% endif %}
+                    {% csrf_token %}
+
+                    {% for field in form %}
+                        <div class="form-group row" aria-required={% if field.field.required %}"true"{% else %}"false"{% endif %}>
+                                <label for="{{ field.id_for_label }}" class="col-md-4 col-form-label text-md-right">{{ field.label }}{% if field.field.required %}<span class="required"></span>{% endif %}</label>
+                                <div class="col-md-6">
+
+                                    {# подключаем фильтр и указываем класс #}
+                                    {{ field|addclass:"form-control" }}
+
+                                    {% if field.help_text %}
+                                    <small id="{{ field.id_for_label }}-help" class="form-text text-muted">{{ field.help_text|safe }}</small>
+                                    {% endif %}
+                                </div>
+                        </div>
+
+                    {% endfor %}
+
+                    <div class="col-md-6 offset-md-4">
+                            <button type="submit" class="btn btn-primary">
+                                {% if here is True %}
+                                Редактировать запись
+                                {% else %}
+                                Опубликовать запись
+                                {% endif %}
+                            </button>
+                    </div>
+        </form>
+
+
+
+{% endblock %}
