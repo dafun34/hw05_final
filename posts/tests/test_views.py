@@ -237,56 +237,71 @@ class PostPagesTest(TestCase):
         response_after_new = self.authorized_client.get(reverse('posts:index'))
         posts_second_try = response_after_new.content
         self.assertEqual(posts_first_try, posts_second_try)
-        self.my_cache = caches['default']
-        self.my_cache.clear()
+        caches['default'].clear()
         response_after_clear = self.authorized_client.get(reverse
                                                           ('posts:index'))
         posts_third_try = response_after_clear.content
         self.assertNotEqual(posts_first_try, posts_third_try)
 
-    def test_authorized_user_can_follow_users_and_unfollow(self):
-        """Проверяет что залогиненый пользователь может подписываться на
-        дпугих пользователей и отписываться тоже умеет"""
+    def test_authorized_user_can_follow_users(self):
+        """Проверяет, что залогиненый пользователь может подписываться на
+        дпугих пользователей"""
         response = self.authorized_client.get(reverse(
             'posts:profile', kwargs={'username': 'friend'}))
         user = response.context['user']
         author = response.context['author']
         first_follow_count = Follow.objects.filter(user=user).count()
-        user_get_follow_author = Follow.objects.create(
+        Follow.objects.create(
             user=user,
             author=author)
         second_follow_count = Follow.objects.filter(user=user).count()
         self.assertNotEqual(first_follow_count, second_follow_count)
-        user_get_follow_author.delete()
+
+    def test_authorized_user_can_unfollow(self):
+        """Проверяет, что залогиненый пользователь может отписываться от
+          других пользователей """
+        response = self.authorized_client.get(reverse(
+            'posts:profile', kwargs={'username': 'friend'}))
+        user = response.context['user']
+        author = response.context['author']
+        first_follow_count = Follow.objects.filter(user=user).count()
+        follow_object = Follow.objects.create(
+            user=user,
+            author=author)
+        second_follow_count = Follow.objects.filter(user=user).count()
+        self.assertNotEqual(first_follow_count, second_follow_count)
+        follow_object.delete()
         third_follow_count = Follow.objects.filter(user=user).count()
         self.assertEqual(first_follow_count, third_follow_count)
 
     def test_authorized_user_can_see_in_self_follow_posts_by_following(self):
         """Новая запись пользователя появляется в ленте тех, кто на него
-        подписан и не появляется в ленте тех, кто не подписан на него. """
+        подписан """
         friend = self.test_user_follow
         response = self.authorized_client.get(reverse('posts:follow_index'))
         first_posts_count = response.context['page'].paginator.count
         user = response.context['user']
         Follow.objects.create(user=user, author=friend)
         Post.objects.create(author=friend, text='мой первый пост')
-        self.my_cache.clear()
+        caches['default'].clear()
         response_after = self.authorized_client.get(reverse(
             'posts:follow_index'))
         second_posts_count = response_after.context['page'].paginator.count
         self.assertNotEqual(first_posts_count, second_posts_count)
-        self.authorized_client.force_login(self.test_user_follow_2)
-        self.my_cache.clear()
-        response_nikita_follow = self.authorized_client.get(reverse(
+
+    def test_authorized_user_cant_see_posts_in_follow_index_by_unffolow(self):
+        """Новая запись пользователя не появляется в ленте тех,
+         кто на него не подписан"""
+        not_friend = self.test_user_follow
+        response = self.authorized_client.get(reverse('posts:follow_index'))
+        first_posts_count = response.context['page'].paginator.count
+        Post.objects.create(author=not_friend, text='мой тестовый пост')
+        caches['default'].clear()
+        response_after = self.authorized_client.get(reverse(
             'posts:follow_index'))
-        follow_nikita = response_nikita_follow.context['page'].paginator.count
-        Post.objects.create(author=friend, text='мой второй пост')
-        self.my_cache.clear()
-        response2_nikita_flw = self.authorized_client.get(reverse(
-            'posts:follow_index'
-        ))
-        follow_nikita2 = response2_nikita_flw.context['page'].paginator.count
-        self.assertEqual(follow_nikita, follow_nikita2)
+        second_posts_count = response_after.context['page'].paginator.count
+        self.assertEqual(first_posts_count, second_posts_count)
+
 
     def test_guest_cant_comment(self):
         """Аноним не может добавлять комменты"""
