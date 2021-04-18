@@ -302,7 +302,6 @@ class PostPagesTest(TestCase):
         second_posts_count = response_after.context['page'].paginator.count
         self.assertEqual(first_posts_count, second_posts_count)
 
-
     def test_guest_cant_comment(self):
         """Аноним не может добавлять комменты"""
         response = self.guest_client.get(reverse(
